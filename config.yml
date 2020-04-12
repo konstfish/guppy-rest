@@ -1,0 +1,24 @@
+# We coo
+
+http://ssh.konst.fish:2701:
+  auth/authenticate:
+    methods:
+      post:
+        body:
+          username: 'break'
+          password: '123'
+        description: 'Test Authentication'
+        should:
+          default: 200
+          no-headers: 200
+          no-body: 400
+
+  auth/profile:
+    methods:
+      get:
+        headers:
+          Authorization: '{from}auth/authenticate:token'
+        description: 'Test Authentication'
+        should:
+          default: 200
+          no-headers: 401
