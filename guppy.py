@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import yaml
+from yaml import Loader, Dumper
 import json
 import time
 import requests
@@ -35,10 +36,13 @@ def traverse(body):
 
 CONFIG_NAME = './guppy.yml'
 OPTION_NAME = './guppy_options.yml'
-
+f=open(CONFIG_NAME, 'r')
+p=yaml.load(f, Loader=Loader)
+f.close()
 try:
     f=open(CONFIG_NAME, 'r')
-    p=yaml.load(f)
+    p=yaml.load(f, Loader=Loader)
+    f.close()
     if(p):
         print('* config load done')
 except:
@@ -47,7 +51,8 @@ except:
 
 try:
     f=open(OPTION_NAME, 'r')
-    option=yaml.load(f)
+    option=yaml.load(f, Loader=Loader)
+    f.close()
     if(p):
         print('* options load done')
 except:
