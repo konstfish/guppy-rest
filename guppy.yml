@@ -1,12 +1,13 @@
 # We coo
 
+# testing user flow
 http://localhost:2701:
   auth/authenticate:
     methods:
       post:
         body:
           username: 'break'
-          password: '1234'
+          password: '123'
         description: 'Test Authentication'
         should:
           default: 200
@@ -21,4 +22,41 @@ http://localhost:2701:
         description: 'Test Profile Fetch'
         should:
           default: 200
+          no-headers: 401
+
+  auth/modifyUser:
+    methods:
+      post:
+        body:
+          _id: '{from}auth/authenticate:user;_id'
+        headers:
+          Authorization: '{from}auth/authenticate:token'
+        description: 'Test Profile Modification'
+        should:
+          default: 200
+          no-body: 400
+          no-headers: 401
+
+  auth/changePassword:
+    methods:
+      post:
+        body:
+          _id: '{from}auth/authenticate:user;_id'
+          password: '123'
+        headers:
+          Authorization: '{from}auth/authenticate:token'
+        description: 'Test Password Change'
+        should:
+          default: 200
+          no-body: 400
+          no-headers: 401
+
+  auth/listTeams:
+    methods:
+      get:
+        headers:
+          Authorization: '{from}auth/authenticate:token'
+        description: 'Test Team listing'
+        should:
+          default: 401
           no-headers: 401
