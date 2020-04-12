@@ -1,7 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import yaml
 import json
 
 import requests
+import sys
 
 print('* starting\n')
 
@@ -14,20 +18,27 @@ def check(should_code, desc, is_code, return_data, url, cond):
         print('*    ✗ (' + str(is_code) + ')')
 
     if(option['print_json']):
-        print('*  ' + (str(json.dumps(return_data, sort_keys=True, indent=4, separators=(',', ': ')))))
+        print(json.dumps(return_data, sort_keys=True, indent=4, separators=(',', ': ')))
 
-CONFIG_NAME = 'config.yml'
-OPTION_NAME = 'options.yml'
+CONFIG_NAME = './guppy.yml'
+OPTION_NAME = './guppy_options.yml'
 
-f=open(CONFIG_NAME, 'r')
-p=yaml.load(f)
-if(p):
-    print('* config load done')
+try:
+    f=open(CONFIG_NAME, 'r')
+    p=yaml.load(f)
+    if(p):
+        print('* config load done')
+except:
+    print('* error loading config')
+    sys.exit(0)
 
-f=open(OPTION_NAME, 'r')
-option=yaml.load(f)
-if(option):
-    print('* option load done')
+try:
+    f=open(OPTION_NAME, 'r')
+    option=yaml.load(f)
+    if(p):
+        print('* options load done')
+except:
+    option = {'print_json': 0}
 
 print()
 
