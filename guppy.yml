@@ -42,7 +42,7 @@ http://localhost:2701:
       post:
         body:
           _id: '{from}auth/authenticate:user;_id'
-          password: '123'
+          password: '{link}auth/authenticate:password'
         headers:
           Authorization: '{from}auth/authenticate:token'
         description: 'Test Password Change'

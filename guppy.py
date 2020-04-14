@@ -17,22 +17,42 @@ def check(should_code, desc, is_code, return_data, url, cond):
     if(should_code == is_code):
         print('*    ✔ (' + str(is_code) + ')')
     else:
-        print('*    ✗ (' + str(is_code) + ')')
+        print('*    ✗ (' + str(is_code) + ', should respond with ' + str(should_code) + ')')
 
     if(option['print_json']):
         print(json.dumps(return_data, sort_keys=True, indent=4, separators=(',', ': ')))
 
-def traverse(body):
+def traverse(body, param):
     for entry in body:
-        if(isinstance(body[entry], str) and body[entry].startswith('{from}')):
-            opts = body[entry].replace('{from}', '').split(':')
-            pa = opts[1].split(";")
-            tmp = storage[opts[0]]['default']
-            for i in range(len(pa)):
-                tmp = tmp[pa[i]]
+        if(isinstance(body[entry], str)):
+            if(body[entry].startswith('{from}')):
+                opts = body[entry].replace('{from}', '').split(':')
+                if(checkResponse(opts[0])):
+                    pa = opts[1].split(";")
+                    tmp = storage[opts[0]]['default']['response']
+                    for i in range(len(pa)):
+                        tmp = tmp[pa[i]]
+                    body[entry] = tmp
+                else:
+                    print('*  - Attempted link from ' + opts[0] + 'for variable ' + opts[1] + ' failed.')
 
-            body[entry] = tmp
+            elif(body[entry].startswith('{link}')):
+                opts = body[entry].replace('{link}', '').split(':')
+                pa = opts[1].split(";")
+                tmp = storage[opts[0]]['default']['arguments'][param]
+                for i in range(len(pa)):
+                    tmp = tmp[pa[i]]
+
+                body[entry] = tmp
+
     return body
+
+def checkResponse(location):
+    if(storage[location]['default']['res_code'] == storage[location]['default']['should_code']):
+        return True
+    else:
+        return False
+
 
 CONFIG_NAME = './guppy.yml'
 OPTION_NAME = './guppy_options.yml'
@@ -56,7 +76,7 @@ try:
     if(p):
         print('* options load done')
 except:
-    option = {'print_json': 0}
+    option = {'print_json': 1}
 
 print()
 
@@ -78,12 +98,12 @@ for key in p:
 
             if('body' in p[key][location]['methods'][method]):
                 body = p[key][location]['methods'][method]['body']
-                body = traverse(body)
+                body = traverse(body, 'body')
                 conds.append('no-body')
 
             if('headers' in p[key][location]['methods'][method]):
                 headers = p[key][location]['methods'][method]['headers']
-                headers = traverse(headers)
+                headers = traverse(headers, 'headers')
                 conds.append('no-headers')
 
             storage[location] = {}
@@ -98,13 +118,7 @@ for key in p:
                 if(cond == 'no-headers'):
                     res = requests.request(method.upper(), url, data=body, headers={})
 
-                try:
-                    js = res.json()
-                    storage[location][cond] = res.json()
-                except:
-                    print('*    - unable to decode json')
-                    js = res.text
-                    storage[location][cond] = {}
+                storage[location][cond] = {}
 
                 if('should' in p[key][location]['methods'][method] and cond in p[key][location]['methods'][method]['should']):
                     should_cond = p[key][location]['methods'][method]['should'][cond]
@@ -123,6 +137,20 @@ for key in p:
                     desc = p[key][location]['methods'][method]['description']
                 else:
                     desc = ''
+
+                try:
+                    js = res.json()
+                    storage[location][cond]['response'] = js
+                except:
+                    print('*    - unable to decode json')
+                    js = res.text
+                    storage[location][cond]['response'] = {'error-text': js}
+
+                storage[location][cond]['res_code'] = res.status_code
+                storage[location][cond]['should_code'] = should_cond
+                storage[location][cond]['arguments'] = {}
+                storage[location][cond]['arguments']['body'] = body
+                storage[location][cond]['arguments']['headers'] = headers
 
                 check(should_cond, desc, res.status_code, js, url, cond)
 
